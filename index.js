@@ -8,7 +8,7 @@ const through = require("through2");
 const bresolve = require('browser-resolve');
 const md5 = require("./lib/md5");
 
-const _empry = path.join(__dirname, './_empty.js');
+const _empty = path.join(__dirname, './lib/_empty.js');
 
 const regexGlobalAlia = /global\.[a-zA-Z]\w+/;
 
@@ -24,7 +24,7 @@ module.exports = function (b, alias) {
 
     b._bresolve = function (id, parent, cb) {
         if (alias[id]) {
-            return cb(null,_empry,{})
+            return cb(null,_empty,{})
         }
         return bresolve(id,parent,cb)
     }
@@ -42,7 +42,7 @@ module.exports = function (b, alias) {
                     chunk.deps[key] = pkg.id
                 }
             });
-            return (chunk.id === _empry)?
+            return (chunk.id === _empty)?
                 next():next(null,chunk)
         },function (flush) {
             Promise.all(Object.keys(aliasPackages).map(key=>new Promise((done)=>{
