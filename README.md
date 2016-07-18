@@ -6,18 +6,18 @@
 
 ```javascript
 "use strict";
-var vue = require("Vue")
+var vue = require("Vue");
 ```
 
 ```
 "use strict";
-const browserify = require("browserify")
+const browserify = require("browserify");
 const alias = require("awesome-aliasify");
 
 let b = browserify({ entries: "./src/index.js" })
     .plugin(alias,{
         vue: "global.Vue"
-    })
+    });
     
 b.bundle()
 /* .pipe(...) */
