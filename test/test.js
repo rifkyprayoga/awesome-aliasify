@@ -6,7 +6,11 @@ const path = require("path");
 const browserify = require("browserify");
 const through = require("through2");
 const mocha = require("mocha");
-const expect = require("chai").expect;
+const chai = require("chai");
+const spies = require("chai-spies");
+
+const expect = chai.expect;
+chai.use(spies);
 const describe = mocha.describe;
 const alias = require("../");
 
@@ -28,5 +32,24 @@ describe('test', function() {
         }))
 
         return b.bundle().on("end",_=>done()).pipe(through())
+    })
+
+    it("should be reject",function(done){
+        let b = browserify({entries:path.resolve(__dirname,"./src/reject.js")})
+                .plugin(alias,{
+                    vue:"global.Vue"
+                })
+        let onerror = chai.spy(err=>{
+            //console.log(err.message);
+        });
+
+        b.bundle().on("error",(err)=>{
+            onerror(err);
+            expect(onerror).to.have.been.called();
+            done();
+        }).on("end",_=>{
+            done()
+        }).pipe(through());
+
     })
 })
