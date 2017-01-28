@@ -59,6 +59,7 @@ module.exports = function (b, alias) {
                             id
                             , deps
                             , source:source.toString()
+                            , file:path.join(__dirname, "./lib/_empty")
                         })
                         flush()
                     }))
