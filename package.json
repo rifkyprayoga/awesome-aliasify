@@ -1,6 +1,6 @@
 {
   "name": "awesome-aliasify",
-  "version": "0.0.91",
+  "version": "0.0.1",
   "description": "",
   "main": "index.js",
   "dependencies": {

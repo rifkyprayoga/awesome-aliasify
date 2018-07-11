@@ -24,3 +24,12 @@ b.bundle()
 ```
 
 plugin will transform `vue` module in to `module.exports = global.Vue`
+
+##### Local Redirect
+
+```
+let b = browserify({ entries: "./src/index.js" })
+    .plugin(alias,{
+        someLocal: "./cwd/path/to/local.js"
+    });
+```
