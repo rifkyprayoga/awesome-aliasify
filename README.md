@@ -9,7 +9,7 @@
 var vue = require("Vue");
 ```
 
-```
+```javascript
 "use strict";
 const browserify = require("browserify");
 const alias = require("awesome-aliasify");
@@ -27,7 +27,7 @@ plugin will transform `vue` module in to `module.exports = global.Vue`
 
 ##### Local Redirect
 
-```
+```javascript
 let b = browserify({ entries: "./src/index.js" })
     .plugin(alias,{
         someLocal: "./cwd/path/to/local.js"
