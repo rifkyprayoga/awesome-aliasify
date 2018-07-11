@@ -12,7 +12,7 @@ const cwd = process.cwd();
 
 const _empty = path.join(__dirname, './lib/_empty.js');
 
-const regexGlobalAlia = /global\.[a-zA-Z]\w+/;
+const regexGlobalAlia = /global\.[\w\$_]+/;
 
 const regexPathAlia = /^\.\/.+/;
 
