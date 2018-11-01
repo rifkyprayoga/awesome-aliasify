@@ -11,6 +11,27 @@ const chai = require("chai");
 const spies = require("chai-spies");
 const cwd = process.cwd();
 
+const babelrc = {
+  "presets": [
+    [
+      "@babel/preset-env", {
+      "loose": false,
+      "targets": {
+        "browsers": ["last 2 versions", "safari >= 10"]
+      }
+    }
+    ]
+  ],
+  "plugins": [
+    [
+      "@babel/plugin-transform-modules-commonjs",
+      {
+        "strict": false
+      }
+    ]
+  ]
+}
+
 const expect = chai.expect;
 chai.use(spies);
 const describe = mocha.describe;
@@ -117,5 +138,32 @@ describe('test', function () {
     }))
 
     return b.bundle().on("end", _ => done()).pipe(through())
+  })
+
+  it("alias to a redirected file (standalone) with babel transform", function (done) {
+    let b = browserify({ entries: path.resolve(__dirname, "./src/index-redirect-standalone-es6.js") })
+      .plugin(alias, {
+        vue: "global.Vue",
+        redirect: "./test/src/fixture-redirect-es6.js"
+      })
+      .transform(babelify, {
+        ...babelrc
+      })
+
+    const allChunkIds = []
+    b.pipeline.get("deps").push(through.obj(function (chunk, enc, next) {
+      if ( chunk.entry ) {
+        const keys = Object.keys(chunk.deps);
+      }
+      // console.log("\n====\n", chunk.id, chunk.source);
+      allChunkIds.push(chunk.id);
+      next(null, chunk);
+    }))
+
+    return b.bundle().on("end", _ => {
+      expect(allChunkIds.length).to.be.equal(4);
+      expect(allChunkIds).to.include(path.join(cwd, "./test/src/fixture-redirect-es6.js"));
+      done();
+    }).pipe(through());
   })
 })

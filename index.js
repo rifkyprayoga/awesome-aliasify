@@ -19,22 +19,35 @@ const regexPathAlia = /^\.\/.+/;
 module.exports = function (b, alias) {
   let aliasPackagesMappingById = {};
   let aliasPackages = Object.keys(alias).reduce((final, key) => {
-    let value = alias[key];
-    let isRelativePath = regexPathAlia.test(value);
+    const value = alias[key];
+    const isRelativePath = regexPathAlia.test(value);
+    const isGlobalAlia = regexGlobalAlia.test(value);
     let pkg = {
       id: isRelativePath ? path.join(cwd, value) : md5(key, 10),
       source: value,
       deps: {},
-      isRelativePath
+      isRelativePath,
+      isGlobalAlia
     }
 
     final[key] = pkg;
     aliasPackagesMappingById[pkg.id] = pkg;
     return final
   }, {});
+  let aliasPackagesGlobal = Object.keys(aliasPackages).reduce((final, key) => {
+    const pkg = aliasPackages[key];
+    if (pkg.isGlobalAlia) {
+      final[key] = pkg
+    }
+    return final;
+  }, {})
 
   b._bresolve = function (id, parent, cb) {
-    if ( alias[id] ) {
+    const alia = aliasPackages[id];
+    if ( alia ) {
+      if (alia.isRelativePath) {
+        return cb(null, alia.id);
+      }
       return cb(null, _empty, {})
     }
     return bresolve(id, parent, cb)
@@ -44,9 +57,10 @@ module.exports = function (b, alias) {
   b.on('reset', () => resetPipeline(b))
 
   function resetPipeline(b) {
+
     b.pipeline.get("deps").push(through.obj(function (chunk, enc, next) {
       Object.keys(chunk.deps).forEach(key => {
-        let pkg = aliasPackages[key];
+        let pkg = aliasPackagesGlobal[key];
         if ( pkg ) {
           chunk.deps[key] = pkg.id
         }
@@ -58,12 +72,12 @@ module.exports = function (b, alias) {
 
       return (chunk.id === _empty) ? next() : next(null, chunk)
     }, function (flush) {
-      Promise.all(Object.keys(aliasPackages).map(key => new Promise((done) => {
-        let pkg = aliasPackages[key];
+      Promise.all(Object.keys(aliasPackagesGlobal).map(key => new Promise((done) => {
+        let pkg = aliasPackagesGlobal[key];
         let source = new Buffer("");
 
         transformSource(pkg.id, pkg.source)
-          .pipe(b._mdeps.getTransforms(pkg.id, {}, { builtin: true }))
+          .pipe(b._mdeps.getTransforms(pkg.id, {}, { builtin: false }))
           .pipe(through(function (buf, _, next) {
             source = Buffer.concat([source, buf])
             next(null, buf)
@@ -99,10 +113,6 @@ module.exports = function (b, alias) {
 function transformSource(id, sourcePath) {
   if ( regexGlobalAlia.test(sourcePath) ) {
     return stringStream("module.exports = " + sourcePath);
-  }
-
-  if ( path.isAbsolute(id) ) {
-    return fs.createReadStream(id);
   }
 
   return stringStream("module.exports = void 0")
